@@ -62,9 +62,11 @@ class MeshtasticBot(ABC):
         asyncio.run_coroutine_threadsafe(self._on_connect(), self.loop)
 
     def _handle_on_recieve(self, packet):
-        if not self.loop:
+        if not self.loop or not self.my_node:
             return
         user = None
+        if packet["to"] != self.my_node["num"]:
+            return
         if self.interface.nodesByNum:
             node = self.interface.nodesByNum.get(packet["from"])
             if node:
