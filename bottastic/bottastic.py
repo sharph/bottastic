@@ -1,21 +1,16 @@
-from abc import ABC, abstractmethod
-import sys
-import time
 import asyncio
 import base64
-
-from pubsub import pub
+import logging
+import sys
+from abc import ABC
+from concurrent.futures import ThreadPoolExecutor
+from typing import Optional
 
 import meshtastic
-import meshtastic.tcp_interface
 import meshtastic.mesh_interface
 import meshtastic.protobuf.portnums_pb2
-import logging
-
-from functools import wraps
-from concurrent.futures import ThreadPoolExecutor
-
-from typing import Optional
+import meshtastic.tcp_interface
+from pubsub import pub
 
 logging.basicConfig(level=logging.INFO)
 thread_pool = ThreadPoolExecutor()
