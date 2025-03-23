@@ -1,0 +1,12 @@
+name: Run Ruff
+
+on:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: astral-sh/ruff-action@v3
