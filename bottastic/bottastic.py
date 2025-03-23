@@ -36,32 +36,26 @@ class MeshtasticNode:
         self.num = num
 
     @property
-    def key(self):
+    def node_info(self):
         if self.bottastic.interface.nodesByNum:
-            try:
-                return base64.b64decode(
-                    self.bottastic.interface.nodesByNum[self.num]["user"]["publicKey"]
-                )
-            except KeyError:
-                return None
+            return self.bottastic.interface.nodesByNum[self.num]
+        raise ValueError
+
+    @property
+    def id(self):
+        return self.node_info["user"]["id"]
+
+    @property
+    def key(self):
+        return base64.b64decode(self.node_info["user"]["publicKey"])
 
     @property
     def short_name(self):
-        if self.bottastic.interface.nodesByNum:
-            try:
-                return self.bottastic.interface.nodesByNum[self.num]["user"][
-                    "shortName"
-                ]
-            except KeyError:
-                return None
+        return self.node_info["user"]["shortName"]
 
     @property
     def long_name(self):
-        if self.bottastic.interface.nodesByNum:
-            try:
-                return self.bottastic.interface.nodesByNum[self.num]["user"]["longName"]
-            except KeyError:
-                return None
+        return self.node_info["user"]["longName"]
 
     async def send_message(
         self,
@@ -75,7 +69,7 @@ class MeshtasticNode:
 
         def _on_deliver(_):
             if self.bottastic.echo_sent and self.bottastic.echo_recieved:
-                print(f"Delivered message to {self.num}: {text}")
+                print(f"Delivered message to {self.id}: {text}")
 
         await call_async(
             self.bottastic.interface.sendData,
@@ -89,7 +83,7 @@ class MeshtasticNode:
             portNum=meshtastic.portnums_pb2.PortNum.TEXT_MESSAGE_APP,
         )
         if self.bottastic.echo_sent:
-            print(f"Sent to {self.num} ({'enc' if key else 'no enc'}): {text}")
+            print(f"Sent to {self.id} ({'enc' if key else 'no enc'}): {text}")
 
 
 class Bottastic(ABC):
@@ -120,12 +114,25 @@ class Bottastic(ABC):
     def _handle_on_recieve(self, packet):
         if not self.loop or not self.my_node:
             return
-        if packet["to"] != self.my_node["num"]:
-            return
         if "decoded" not in packet or "text" not in packet["decoded"]:
             return
+        if packet["to"] == meshtastic.BROADCAST_NUM:
+            if self.echo_recieved:
+                print(f"Message from {packet['fromId']}: {packet['decoded']['text']}")
+            asyncio.run_coroutine_threadsafe(
+                self.handle_message(
+                    from_node=MeshtasticNode(self, packet["from"]),
+                    message=packet["decoded"]["text"],
+                ),
+                self.loop,
+            )
+            return
+        if packet["to"] != self.my_node["num"]:
+            return
         if self.echo_recieved:
-            print(f"Message from {packet['from']}: {packet['decoded']['text']}")
+            print(
+                f"Direct message from {packet['fromId']}: {packet['decoded']['text']}"
+            )
         asyncio.run_coroutine_threadsafe(
             self.handle_direct_message(
                 from_node=MeshtasticNode(self, packet["from"]),
@@ -137,11 +144,34 @@ class Bottastic(ABC):
     def get_node_by_num(self, num: int):
         return MeshtasticNode(self, num)
 
+    async def send_message(
+        self,
+        text: str,
+        want_response=False,
+    ):
+        def _on_deliver(_):
+            if self.echo_sent and self.echo_recieved:
+                print(f"Delivered message: {text}")
+
+        await call_async(
+            self.interface.sendData,
+            text.encode("utf-8"),
+            wantAck=want_response,
+            wantResponse=want_response,
+            onResponse=_on_deliver if want_response else None,
+            portNum=meshtastic.portnums_pb2.PortNum.TEXT_MESSAGE_APP,
+        )
+        if self.echo_sent:
+            print(f"Sent: {text}")
+
     def close(self):
         self.interface.close()
         _registered_bots.remove(self)
 
     async def on_initialized(self):
+        pass
+
+    async def handle_message(self, from_node: MeshtasticNode, message: str):
         pass
 
     async def handle_direct_message(self, from_node: MeshtasticNode, message: str):
@@ -152,6 +182,7 @@ class Bottastic(ABC):
         if self.interface in _connected_bots:
             _connected_bots.remove(self.interface)
             await self._on_connect()
+
         while True:
             await asyncio.sleep(10)
 
@@ -187,6 +218,13 @@ pub.subscribe(
 
 
 class PingPongBot(Bottastic):
+    async def handle_message(self, from_node: MeshtasticNode, message: str):
+        if message.strip().lower() == "ping":
+            if from_node.long_name:
+                await self.send_message(f"pong! hello, {from_node.long_name}")
+            else:
+                await self.send_message("pong!")
+
     async def handle_direct_message(self, from_node: MeshtasticNode, message: str):
         if message.strip().lower() == "ping":
             if from_node.long_name:
