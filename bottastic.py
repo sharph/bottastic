@@ -36,7 +36,7 @@ class NoEncryptionKey(Exception):
     pass
 
 
-class MeshtasticBot(ABC):
+class Bottastic(ABC):
     def __init__(
         self,
         interface: meshtastic.mesh_interface.MeshInterface,
@@ -163,7 +163,7 @@ pub.subscribe(
 )
 
 
-class PingPongBot(MeshtasticBot):
+class PingPongBot(Bottastic):
     async def handle_message(
         self, from_id: int, message: str, from_user: Optional[dict]
     ):
