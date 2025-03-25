@@ -1,7 +1,6 @@
 import asyncio
 import base64
 import logging
-import sys
 from abc import ABC
 from concurrent.futures import ThreadPoolExecutor
 
@@ -231,8 +230,3 @@ class PingPongBot(Bottastic):
                 await from_node.send_message(f"pong! hello, {from_node.long_name}")
             else:
                 await from_node.send_message("pong!")
-
-
-if __name__ == "__main__":
-    interface = meshtastic.tcp_interface.TCPInterface(hostname=sys.argv[1])
-    PingPongBot(interface, echo_sent=True, echo_recieved=True).run()
