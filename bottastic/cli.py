@@ -71,7 +71,7 @@ def main():
         "--echo_sent", type=bool, default=False, help="Echo sent messages to console"
     )
     parser.add_argument(
-        "--echo_recieved",
+        "--echo_received",
         type=bool,
         default=False,
         help="Echo received messages to console",

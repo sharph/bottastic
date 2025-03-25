@@ -27,7 +27,7 @@ bottastic --port /dev/ttyUSB0 bottastic.bottastic:PingPongBot
 bottastic --host 192.168.1.100 bottastic.bottastic:PingPongBot
 
 # Enable echo options
-bottastic --port /dev/ttyUSB0 bottastic.bottastic:PingPongBot --echo_sent=True --echo_recieved=True
+bottastic --port /dev/ttyUSB0 bottastic.bottastic:PingPongBot --echo_sent=True --echo_received=True
 
 # Enable verbose logging
 bottastic --port /dev/ttyUSB0 bottastic.bottastic:PingPongBot -v
@@ -66,5 +66,5 @@ bottastic --port /dev/ttyUSB0 mybot:MyCustomBot
 - `--tcp HOST` - Connect via TCP to a specified hostname/IP
 - `--port PATH` - Connect via serial to a specified port (e.g., /dev/ttyUSB0)
 - `--echo_sent BOOL` - Whether to print sent messages to console
-- `--echo_recieved BOOL` - Whether to print received messages to console
+- `--echo_received BOOL` - Whether to print received messages to console
 - `--verbose`, `-v` - Enable verbose logging
