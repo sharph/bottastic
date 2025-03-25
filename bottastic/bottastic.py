@@ -1,7 +1,6 @@
 import asyncio
 import base64
 import logging
-import sys
 from abc import ABC
 from concurrent.futures import ThreadPoolExecutor
 
@@ -68,7 +67,7 @@ class MeshtasticNode:
             raise NoEncryptionKey()
 
         def _on_deliver(_):
-            if self.bottastic.echo_sent and self.bottastic.echo_recieved:
+            if self.bottastic.echo_sent and self.bottastic.echo_received:
                 print(f"Delivered message to {self.id}: {text}")
 
         await call_async(
@@ -91,11 +90,11 @@ class Bottastic(ABC):
         self,
         interface: meshtastic.mesh_interface.MeshInterface,
         echo_sent: bool = False,
-        echo_recieved: bool = False,
+        echo_received: bool = False,
     ):
         self.interface = interface
         self.echo_sent = echo_sent
-        self.echo_recieved = echo_recieved
+        self.echo_received = echo_received
         self.loop = None
         self.my_node = None
         self.my_user = None
@@ -111,13 +110,13 @@ class Bottastic(ABC):
             raise Exception("Loop not set up")
         asyncio.run_coroutine_threadsafe(self._on_connect(), self.loop)
 
-    def _handle_on_recieve(self, packet):
+    def _handle_on_receive(self, packet):
         if not self.loop or not self.my_node:
             return
         if "decoded" not in packet or "text" not in packet["decoded"]:
             return
         if packet["to"] == meshtastic.BROADCAST_NUM:
-            if self.echo_recieved:
+            if self.echo_received:
                 print(f"Message from {packet['fromId']}: {packet['decoded']['text']}")
             asyncio.run_coroutine_threadsafe(
                 self.handle_message(
@@ -129,7 +128,7 @@ class Bottastic(ABC):
             return
         if packet["to"] != self.my_node["num"]:
             return
-        if self.echo_recieved:
+        if self.echo_received:
             print(
                 f"Direct message from {packet['fromId']}: {packet['decoded']['text']}"
             )
@@ -150,7 +149,7 @@ class Bottastic(ABC):
         want_response=False,
     ):
         def _on_deliver(_):
-            if self.echo_sent and self.echo_recieved:
+            if self.echo_sent and self.echo_received:
                 print(f"Delivered message: {text}")
 
         await call_async(
@@ -194,7 +193,7 @@ def on_receive(packet, interface: meshtastic.mesh_interface.MeshInterface):
     """called when a packet arrives"""
     for registered_bot in _registered_bots:
         if registered_bot.interface is interface:
-            registered_bot._handle_on_recieve(packet)
+            registered_bot._handle_on_receive(packet)
 
 
 def on_connection(
@@ -231,8 +230,3 @@ class PingPongBot(Bottastic):
                 await from_node.send_message(f"pong! hello, {from_node.long_name}")
             else:
                 await from_node.send_message("pong!")
-
-
-if __name__ == "__main__":
-    interface = meshtastic.tcp_interface.TCPInterface(hostname=sys.argv[1])
-    PingPongBot(interface, echo_sent=True, echo_recieved=True).run()

@@ -7,3 +7,10 @@ requires-python = ">=3.12.5"
 dependencies = [
     "meshtastic>=2.6.0",
 ]
+
+[project.scripts]
+bottastic = "bottastic.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
