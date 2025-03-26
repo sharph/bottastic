@@ -3,7 +3,7 @@ name = "bottastic"
 version = "0.1.0"
 description = "a bot library for meshtastic"
 readme = "README.md"
-requires-python = ">=3.12.5"
+requires-python = ">=3.12"
 dependencies = [
     "meshtastic>=2.6.0",
 ]

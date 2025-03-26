@@ -1,5 +1,6 @@
 version = 1
-requires-python = ">=3.12.5"
+revision = 1
+requires-python = ">=3.12"
 
 [[package]]
 name = "bleak"
@@ -27,7 +28,7 @@ wheels = [
 [[package]]
 name = "bottastic"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "meshtastic" },
 ]
