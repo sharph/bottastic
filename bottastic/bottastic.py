@@ -6,8 +6,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 import meshtastic
 import meshtastic.mesh_interface
-import meshtastic.protobuf.portnums_pb2
-import meshtastic.tcp_interface
 from pubsub import pub
 
 logging.basicConfig(level=logging.INFO)
