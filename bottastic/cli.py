@@ -9,7 +9,7 @@ import meshtastic
 import meshtastic.tcp_interface
 import meshtastic.serial_interface
 
-from bottastic.bottastic import Bottastic
+from bottastic import Bottastic
 
 
 def import_bot_class(bot_path: str) -> Type[Bottastic]:
