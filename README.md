@@ -18,19 +18,19 @@ Bottastic provides a command-line interface to run your bots. You can [connect t
 
 ```bash
 # Run a bot using automatic serial device detection
-bottastic bottastic.bottastic:PingPongBot
+bottastic bottastic:PingPongBot
 
 # Run a bot with a specific serial port
-bottastic --port /dev/ttyUSB0 bottastic.bottastic:PingPongBot
+bottastic --port /dev/ttyUSB0 bottastic:PingPongBot
 
 # Run a bot using TCP connection
-bottastic --host 192.168.1.100 bottastic.bottastic:PingPongBot
+bottastic --host 192.168.1.100 bottastic:PingPongBot
 
 # Enable echo options
-bottastic --port /dev/ttyUSB0 bottastic.bottastic:PingPongBot --echo_sent=True --echo_received=True
+bottastic --port /dev/ttyUSB0 bottastic:PingPongBot --echo_sent=True --echo_received=True
 
 # Enable verbose logging
-bottastic --port /dev/ttyUSB0 bottastic.bottastic:PingPongBot -v
+bottastic --port /dev/ttyUSB0 bottastic:PingPongBot -v
 ```
 
 ### Creating Your Own Bot
@@ -42,9 +42,9 @@ Create a Python module with a class that inherits from `Bottastic`:
 from bottastic.bottastic import Bottastic, MeshtasticNode
 
 class MyCustomBot(Bottastic):
-    async def handle_message(self, from_node: MeshtasticNode, message: str):
+    async def handle_message(self, from_node: MeshtasticNode, message: str, channel: MeshtasticChannel):
         if message.startswith('hello'):
-            await self.send_message(f"Hello there, {from_node.short_name}!")
+            await channel.send_message(f"Hello there, {from_node.short_name}!")
 
     async def handle_direct_message(self, from_node: MeshtasticNode, message: str):
         await from_node.send_message(f"You sent me: {message}")
@@ -63,7 +63,7 @@ bottastic --port /dev/ttyUSB0 mybot:MyCustomBot
 
 ## Available Options
 
-- `--tcp HOST` - Connect via TCP to a specified hostname/IP
+- `--host HOST` - Connect via TCP to a specified hostname/IP
 - `--port PATH` - Connect via serial to a specified port (e.g., /dev/ttyUSB0)
 - `--echo_sent BOOL` - Whether to print sent messages to console
 - `--echo_received BOOL` - Whether to print received messages to console
