@@ -123,11 +123,13 @@ class Bottastic(ABC):
         self.loop = None
         self.my_node = None
         self.my_user = None
+        self.is_connected = False
         _registered_bots.append(self)
 
     async def _on_connect(self):
         self.my_node = await call_async(self.interface.getMyNodeInfo)
         self.my_user = await call_async(self.interface.getMyUser)
+        self.is_connected = True
         await self.on_initialized()
 
     def _handle_on_connection(self):
@@ -194,7 +196,15 @@ class Bottastic(ABC):
             await self._on_connect()
 
         while True:
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
+            try:
+                self.interface.sendHeartbeat()
+            except Exception:
+                self.is_connected = False
+                return
+            if self.is_connected and not self.interface.isConnected.is_set():
+                self.is_connected = False
+                return
 
     def run(self):
         asyncio.run(self.event_loop())
