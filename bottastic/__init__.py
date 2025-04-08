@@ -1,4 +1,4 @@
-from .bottastic import Bottastic, PingPongBot
+from .bottastic import Bottastic, PingPongBot, MeshtasticNode, MeshtasticChannel
 from . import cli
 
-__all__ = ["Bottastic", "PingPongBot", "cli"]
+__all__ = ["Bottastic", "PingPongBot", "cli", "MeshtasticNode", "MeshtasticChannel"]
