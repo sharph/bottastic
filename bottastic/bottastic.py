@@ -27,6 +27,33 @@ class NoEncryptionKey(Exception):
     pass
 
 
+class MeshtasticChannel:
+    def __init__(self, bottastic: "Bottastic", num: int):
+        self.bottastic = bottastic
+        self.num = num
+
+    async def send_message(
+        self,
+        text: str,
+        want_response=False,
+    ):
+        def _on_deliver(_):
+            if self.bottastic.echo_sent and self.bottastic.echo_received:
+                print(f"Delivered message: {text}")
+
+        await call_async(
+            self.bottastic.interface.sendData,
+            text.encode("utf-8"),
+            wantAck=want_response,
+            wantResponse=want_response,
+            onResponse=_on_deliver if want_response else None,
+            portNum=meshtastic.portnums_pb2.PortNum.TEXT_MESSAGE_APP,
+            channelIndex=self.num,
+        )
+        if self.bottastic.echo_sent:
+            print(f"Sent: {text}")
+
+
 class MeshtasticNode:
     def __init__(self, bottastic: "Bottastic", num: int):
         self.bottastic = bottastic
@@ -120,6 +147,7 @@ class Bottastic(ABC):
                 self.handle_message(
                     from_node=MeshtasticNode(self, packet["from"]),
                     message=packet["decoded"]["text"],
+                    channel=MeshtasticChannel(self, packet["channel"]),
                 ),
                 self.loop,
             )
@@ -141,25 +169,8 @@ class Bottastic(ABC):
     def get_node_by_num(self, num: int):
         return MeshtasticNode(self, num)
 
-    async def send_message(
-        self,
-        text: str,
-        want_response=False,
-    ):
-        def _on_deliver(_):
-            if self.echo_sent and self.echo_received:
-                print(f"Delivered message: {text}")
-
-        await call_async(
-            self.interface.sendData,
-            text.encode("utf-8"),
-            wantAck=want_response,
-            wantResponse=want_response,
-            onResponse=_on_deliver if want_response else None,
-            portNum=meshtastic.portnums_pb2.PortNum.TEXT_MESSAGE_APP,
-        )
-        if self.echo_sent:
-            print(f"Sent: {text}")
+    def get_channel(self, num: int):
+        return MeshtasticChannel(self, num)
 
     def close(self):
         self.interface.close()
@@ -168,7 +179,9 @@ class Bottastic(ABC):
     async def on_initialized(self):
         pass
 
-    async def handle_message(self, from_node: MeshtasticNode, message: str):
+    async def handle_message(
+        self, from_node: MeshtasticNode, message: str, channel: MeshtasticChannel
+    ):
         pass
 
     async def handle_direct_message(self, from_node: MeshtasticNode, message: str):
@@ -215,12 +228,14 @@ pub.subscribe(
 
 
 class PingPongBot(Bottastic):
-    async def handle_message(self, from_node: MeshtasticNode, message: str):
+    async def handle_message(
+        self, from_node: MeshtasticNode, message: str, channel: MeshtasticChannel
+    ):
         if message.strip().lower() == "ping":
             if from_node.long_name:
-                await self.send_message(f"pong! hello, {from_node.long_name}")
+                await channel.send_message(f"pong! hello, {from_node.long_name}")
             else:
-                await self.send_message("pong!")
+                await channel.send_message("pong!")
 
     async def handle_direct_message(self, from_node: MeshtasticNode, message: str):
         if message.strip().lower() == "ping":
